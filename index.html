@@ -5,62 +5,417 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#0F0F1A">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Bütçe">
   <title>💸 Bütçe Takip</title>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Outfit', sans-serif;
+      font-family: 'Outfit', -apple-system, sans-serif;
       background: linear-gradient(135deg, #0F0F1A 0%, #1A1A2E 50%, #16213E 100%);
       min-height: 100vh;
       color: #E8E8E8;
     }
+    .hidden { display: none !important; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 16px; }
     
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+    /* Login */
+    .login-page {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .login-box {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px; padding: 40px 32px; width: 100%; max-width: 380px;
+    }
+    .login-title { text-align: center; margin-bottom: 32px; }
+    .login-title .icon { font-size: 48px; margin-bottom: 12px; }
+    .login-title h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+    .login-title p { color: rgba(255,255,255,0.5); font-size: 14px; }
     
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 8px; font-size: 13px; color: rgba(255,255,255,0.6); }
+    .form-group input {
+      width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px; padding: 14px 16px; color: white; font-family: 'Outfit', sans-serif; font-size: 15px;
+    }
+    .form-group input:focus { outline: none; border-color: #6366F1; background: rgba(99,102,241,0.1); }
+    .form-group input::placeholder { color: rgba(255,255,255,0.3); }
+    
+    .error-msg {
+      background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 10px; padding: 12px; margin-bottom: 16px; color: #EF4444; font-size: 13px; text-align: center;
     }
     
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+    .btn-primary {
+      width: 100%; background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+      border: none; color: white; font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 600;
+      padding: 14px; border-radius: 12px; cursor: pointer;
+    }
+    .btn-primary:hover { opacity: 0.9; }
+    
+    .cloud-note {
+      margin-top: 20px; padding: 12px; background: rgba(34,197,94,0.1);
+      border-radius: 10px; text-align: center; font-size: 12px; color: rgba(255,255,255,0.5);
     }
     
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+    /* Header */
+    .header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 24px; flex-wrap: wrap; gap: 16px;
+    }
+    .header-title h1 { font-size: 24px; font-weight: 700; margin-bottom: 2px; }
+    .header-title p { color: rgba(255,255,255,0.4); font-size: 12px; }
+    .header-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    
+    /* Buttons */
+    .btn {
+      border: none; font-family: 'Outfit', sans-serif; font-weight: 500;
+      padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 12px;
+    }
+    .btn-add {
+      background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+      color: white; padding: 12px 20px; border-radius: 14px; font-size: 14px; font-weight: 600;
+    }
+    .btn-logout {
+      background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3); color: #EF4444;
     }
     
-    .spinner { animation: spin 1s linear infinite; }
+    /* Account selector */
+    .account-selector {
+      display: flex; gap: 6px; background: rgba(255,255,255,0.03);
+      padding: 4px; border-radius: 12px;
+    }
+    .account-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 8px 12px; border-radius: 10px; border: 1px solid transparent;
+      background: transparent; color: rgba(255,255,255,0.5);
+      font-family: 'Outfit', sans-serif; font-size: 11px; cursor: pointer; min-width: 60px;
+    }
+    .account-btn.active { background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.4); color: white; }
+    .account-btn .icon { font-size: 16px; }
+    .account-btn .balance { font-family: 'Space Mono', monospace; font-size: 9px; }
+    .balance-positive { color: #22C55E; }
+    .balance-negative { color: #EF4444; }
+    
+    /* Currency selector */
+    .currency-selector { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .currency-buttons { display: flex; gap: 4px; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 10px; }
+    .currency-btn {
+      display: flex; align-items: center; gap: 4px; padding: 8px 10px; border-radius: 8px;
+      border: none; background: transparent; color: rgba(255,255,255,0.5);
+      font-family: 'Outfit', sans-serif; font-size: 12px; cursor: pointer;
+    }
+    .currency-btn.active { background: rgba(99,102,241,0.3); color: white; }
+    .currency-btn .flag { font-size: 14px; }
+    .rate-info { font-size: 9px; color: rgba(255,255,255,0.4); font-family: 'Space Mono', monospace; }
+    .rate-live { color: rgba(34,197,94,0.8); }
+    
+    /* Cards */
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .card {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px; padding: 20px; position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--card-color); opacity: 0.8;
+    }
+    .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .card-icon { font-size: 24px; }
+    .card-label { color: rgba(255,255,255,0.6); font-size: 12px; }
+    .card-value { font-size: 22px; font-weight: 700; font-family: 'Space Mono', monospace; }
+    
+    /* Tabs */
+    .tabs {
+      display: flex; gap: 6px; margin-bottom: 20px; background: rgba(255,255,255,0.03);
+      padding: 4px; border-radius: 14px; width: fit-content;
+    }
+    .tab-btn {
+      background: transparent; border: none; color: rgba(255,255,255,0.5);
+      font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500;
+      padding: 10px 16px; border-radius: 10px; cursor: pointer;
+    }
+    .tab-btn.active { background: rgba(99,102,241,0.2); color: white; }
+    
+    /* Content box */
+    .content-box {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px; padding: 20px;
+    }
+    .content-box h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .content-box h3 .icon { font-size: 20px; }
+    
+    .distribution-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+    
+    /* Legend item */
+    .legend-item {
+      display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+      background: rgba(255,255,255,0.03); border-radius: 10px; margin-bottom: 6px;
+    }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .legend-icon { font-size: 16px; }
+    .legend-name { flex: 1; font-size: 13px; }
+    .legend-value { font-family: 'Space Mono', monospace; font-size: 12px; color: rgba(255,255,255,0.6); }
+    
+    /* Filter */
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-btn {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.6); font-family: 'Outfit', sans-serif; font-size: 12px;
+      padding: 6px 12px; border-radius: 16px; cursor: pointer;
+    }
+    .filter-btn.active { background: rgba(99,102,241,0.2); border-color: #6366F1; color: white; }
+    
+    /* Transaction */
+    .transaction-list { max-height: 400px; overflow-y: auto; }
+    .transaction-item {
+      display: flex; align-items: center; padding: 14px 16px;
+      background: rgba(255,255,255,0.02); border-radius: 14px; margin-bottom: 8px;
+    }
+    .transaction-icon {
+      width: 40px; height: 40px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; font-size: 18px; margin-right: 12px;
+    }
+    .transaction-info { flex: 1; }
+    .transaction-title { font-weight: 500; font-size: 14px; margin-bottom: 2px; }
+    .transaction-meta { font-size: 11px; color: rgba(255,255,255,0.4); display: flex; gap: 6px; flex-wrap: wrap; }
+    .transaction-tag { background: rgba(255,255,255,0.1); padding: 1px 6px; border-radius: 4px; font-size: 10px; }
+    .transaction-amount { font-family: 'Space Mono', monospace; font-weight: 600; font-size: 14px; margin-right: 8px; }
+    .transaction-amount.income { color: #22C55E; }
+    .transaction-amount.expense { color: #EF4444; }
+    .transaction-delete {
+      background: transparent; border: none; color: rgba(255,255,255,0.3);
+      cursor: pointer; padding: 8px; font-size: 16px;
+    }
+    .transaction-delete:hover { color: #EF4444; }
+    
+    .empty-state { text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.4); }
+    .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+    
+    /* Modal */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8); display: flex; align-items: center;
+      justify-content: center; z-index: 1000; padding: 16px;
+    }
+    .modal-content {
+      background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 24px;
+      padding: 24px; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto;
+    }
+    .modal-title { font-size: 20px; font-weight: 600; margin-bottom: 20px; text-align: center; }
+    
+    /* Type toggle */
+    .type-toggle { display: flex; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 4px; gap: 4px; margin-bottom: 16px; }
+    .type-btn {
+      flex: 1; padding: 12px; border: none; border-radius: 10px;
+      font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 500;
+      cursor: pointer; background: transparent; color: rgba(255,255,255,0.5);
+    }
+    .type-btn.active.expense { background: rgba(239,68,68,0.3); color: white; }
+    .type-btn.active.income { background: rgba(34,197,94,0.3); color: white; }
+    
+    /* Account toggle */
+    .account-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+    .account-toggle-btn {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.5);
+      font-family: 'Outfit', sans-serif; font-size: 13px; cursor: pointer;
+    }
+    .account-toggle-btn.active { border-color: var(--acc-color); background: var(--acc-bg); color: white; }
+    
+    /* Category grid */
+    .category-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+    .category-btn {
+      padding: 10px 6px; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+      background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.7);
+      font-family: 'Outfit', sans-serif; font-size: 11px; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .category-btn:hover { background: rgba(255,255,255,0.08); }
+    .category-btn.active { border-color: var(--cat-color); background: var(--cat-bg); color: white; }
+    .category-btn .icon { font-size: 18px; }
+    
+    /* Modal buttons */
+    .modal-actions { display: flex; gap: 10px; }
+    .modal-btn {
+      flex: 1; padding: 14px; border-radius: 12px; font-family: 'Outfit', sans-serif;
+      font-size: 14px; cursor: pointer;
+    }
+    .modal-btn-cancel {
+      background: transparent; border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6);
+    }
+    .modal-btn-save {
+      flex: 2; background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+      border: none; color: white; font-weight: 600;
+    }
+    .modal-btn-save:disabled { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.3); cursor: not-allowed; }
+    
+    /* Sync indicator */
+    .sync-indicator {
+      position: fixed; top: 16px; right: 16px; background: rgba(99,102,241,0.9);
+      padding: 8px 16px; border-radius: 20px; display: flex; align-items: center;
+      gap: 8px; z-index: 1001; font-size: 13px;
+    }
+    
+    /* Loading */
+    .loading-page {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 16px;
+    }
+    
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .spinner {
+      width: 40px; height: 40px; border: 3px solid rgba(99,102,241,0.3);
+      border-top-color: #6366F1; border-radius: 50%; animation: spin 1s linear infinite;
+    }
+    .spinner-small { width: 14px; height: 14px; border-width: 2px; }
   </style>
 </head>
 <body>
-  <div id="root"></div>
   
-  <script type="text/babel">
-    const { useState, useEffect } = React;
+  <!-- Login Page -->
+  <div id="loginPage" class="login-page">
+    <div class="login-box">
+      <div class="login-title">
+        <div class="icon">💸</div>
+        <h1>Bütçe Takip</h1>
+        <p>Giriş yaparak devam edin</p>
+      </div>
+      
+      <div class="form-group">
+        <label>Kullanıcı Adı</label>
+        <input type="text" id="username" placeholder="Kullanıcı adınızı girin">
+      </div>
+      
+      <div class="form-group">
+        <label>Şifre</label>
+        <input type="password" id="password" placeholder="Şifrenizi girin">
+      </div>
+      
+      <div id="loginError" class="error-msg hidden"></div>
+      
+      <button class="btn-primary" onclick="handleLogin()">Giriş Yap</button>
+      
+      <div class="cloud-note">☁️ Verileriniz bulutta saklanır</div>
+    </div>
+  </div>
+  
+  <!-- Loading Page -->
+  <div id="loadingPage" class="loading-page hidden">
+    <div class="spinner"></div>
+    <p style="color: rgba(255,255,255,0.6);">Veriler yükleniyor...</p>
+  </div>
+  
+  <!-- Main App -->
+  <div id="mainApp" class="container hidden">
     
-    // Supabase bağlantısı
+    <!-- Sync Indicator -->
+    <div id="syncIndicator" class="sync-indicator hidden">
+      <div class="spinner spinner-small"></div>
+      Kaydediliyor...
+    </div>
+    
+    <!-- Header -->
+    <header class="header">
+      <div class="header-title">
+        <h1>💸 Bütçe Takip</h1>
+        <p id="userInfo">☁️ Yükleniyor...</p>
+      </div>
+      
+      <div class="header-controls">
+        <!-- Account Selector -->
+        <div class="account-selector" id="accountSelector"></div>
+        
+        <!-- Add Button -->
+        <button class="btn btn-add" onclick="openModal()">➕ Yeni</button>
+        
+        <!-- Currency Selector -->
+        <div class="currency-selector">
+          <div class="currency-buttons" id="currencyButtons"></div>
+          <div class="rate-info" id="rateInfo"></div>
+        </div>
+        
+        <!-- Logout -->
+        <button class="btn btn-logout" onclick="handleLogout()">🚪 Çıkış</button>
+      </div>
+    </header>
+    
+    <!-- Cards -->
+    <div class="cards" id="summaryCards"></div>
+    
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" id="tabOverview" onclick="switchTab('overview')">📊 Genel Bakış</button>
+      <button class="tab-btn" id="tabTransactions" onclick="switchTab('transactions')">📋 İşlemler</button>
+    </div>
+    
+    <!-- Overview Content -->
+    <div id="overviewContent" class="distribution-grid"></div>
+    
+    <!-- Transactions Content -->
+    <div id="transactionsContent" class="content-box hidden"></div>
+  </div>
+  
+  <!-- Add Modal -->
+  <div id="addModal" class="modal-overlay hidden" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <h2 class="modal-title">✨ Yeni İşlem Ekle</h2>
+      
+      <!-- Type Toggle -->
+      <div class="type-toggle">
+        <button class="type-btn expense active" id="typeExpense" onclick="setType('expense')">💸 Gider</button>
+        <button class="type-btn income" id="typeIncome" onclick="setType('income')">💰 Gelir</button>
+      </div>
+      
+      <!-- Amount -->
+      <div class="form-group">
+        <label>Tutar (<span id="currencySymbol">₺</span>)</label>
+        <input type="number" id="amount" placeholder="0" style="font-size: 24px; text-align: center; font-family: 'Space Mono', monospace;">
+      </div>
+      
+      <!-- Account -->
+      <div class="form-group">
+        <label>Hesap</label>
+        <div class="account-toggle" id="accountToggle"></div>
+      </div>
+      
+      <!-- Category -->
+      <div class="form-group">
+        <label>Kategori</label>
+        <div class="category-grid" id="categoryGrid"></div>
+      </div>
+      
+      <!-- Description -->
+      <div class="form-group">
+        <label>Açıklama (Opsiyonel)</label>
+        <input type="text" id="description" placeholder="Örn: Haftalık market">
+      </div>
+      
+      <!-- Date -->
+      <div class="form-group">
+        <label>Tarih</label>
+        <input type="date" id="date">
+      </div>
+      
+      <!-- Actions -->
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="closeModal()">İptal</button>
+        <button class="modal-btn modal-btn-save" id="saveBtn" onclick="saveTransaction()">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  
+  <script>
+    // Supabase
     const supabaseUrl = 'https://aveuyrpkdzyiadkjwjca.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2ZXV5cnBrZHp5aWFka2p3amNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0NjA0NzMsImV4cCI6MjA4MzAzNjQ3M30.R85z7ls1uixVDeV5YPzxM1jQVV-KQweP6hNMCOWKuCA';
     const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
     
+    // Data
     const EXPENSE_CATEGORIES = [
       { id: 'market', name: 'Market & Gıda', color: '#E63946', icon: '🛒' },
       { id: 'fatura', name: 'Faturalar', color: '#457B9D', icon: '📄' },
@@ -93,594 +448,486 @@
       { id: 'bank', name: 'Banka', icon: '🏦', color: '#3B82F6' },
     ];
     
-    const DEFAULT_RATES = { TRY: 1, USD: 42.96, RUB: 0.54 };
-    const VALID_USERNAME = 'admin';
-    const VALID_PASSWORD = 'admin9913';
+    // State
+    let currentUser = '';
+    let transactions = [];
+    let selectedCurrency = 'TRY';
+    let selectedAccount = 'all';
+    let filterType = 'all';
+    let activeTab = 'overview';
+    let exchangeRates = { TRY: 1, USD: 42.96, RUB: 0.54 };
+    let ratesLive = false;
     
-    function App() {
-      const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('butce_logged_in') === 'true');
-      const [currentUser, setCurrentUser] = useState(() => localStorage.getItem('butce_current_user') || '');
-      const [loginError, setLoginError] = useState('');
-      const [loginData, setLoginData] = useState({ username: '', password: '' });
-      const [isLoading, setIsLoading] = useState(false);
-      const [isSyncing, setIsSyncing] = useState(false);
-      const [exchangeRates, setExchangeRates] = useState(DEFAULT_RATES);
-      const [ratesLive, setRatesLive] = useState(false);
+    // New transaction state
+    let newType = 'expense';
+    let newAccount = 'cash';
+    let newCategory = '';
+    
+    // Auth
+    const VALID_USER = 'admin';
+    const VALID_PASS = 'admin9913';
+    
+    // Init
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check login
+      if (localStorage.getItem('butce_logged_in') === 'true') {
+        currentUser = localStorage.getItem('butce_current_user') || '';
+        if (currentUser) {
+          showLoading();
+          loadData();
+        }
+      }
       
-      const [transactions, setTransactions] = useState([]);
-      const [showAddModal, setShowAddModal] = useState(false);
-      const [activeTab, setActiveTab] = useState('overview');
-      const [selectedCurrency, setSelectedCurrency] = useState(() => localStorage.getItem('butce_currency') || 'TRY');
-      const [selectedAccount, setSelectedAccount] = useState('all');
-      const [filterType, setFilterType] = useState('all');
-      const [newTransaction, setNewTransaction] = useState({
-        type: 'expense', category: '', amount: '', description: '',
-        date: new Date().toISOString().split('T')[0], account: 'cash',
+      // Set today's date
+      document.getElementById('date').value = new Date().toISOString().split('T')[0];
+      
+      // Enter key for login
+      document.getElementById('password').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') handleLogin();
+      });
+      document.getElementById('username').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') document.getElementById('password').focus();
       });
       
-      // Döviz kurlarını çek
-      useEffect(() => {
-        const fetchRates = async () => {
-          try {
-            const res = await fetch('https://api.exchangerate-api.com/v4/latest/TRY');
-            const data = await res.json();
-            setExchangeRates({
-              TRY: 1,
-              USD: 1 / data.rates.USD,
-              RUB: 1 / data.rates.RUB,
-            });
-            setRatesLive(true);
-          } catch (e) { console.error('Kur hatası:', e); }
+      // Fetch rates
+      fetchRates();
+    });
+    
+    // Fetch exchange rates
+    async function fetchRates() {
+      try {
+        const res = await fetch('https://api.exchangerate-api.com/v4/latest/TRY');
+        const data = await res.json();
+        exchangeRates = {
+          TRY: 1,
+          USD: 1 / data.rates.USD,
+          RUB: 1 / data.rates.RUB,
         };
-        fetchRates();
-        const interval = setInterval(fetchRates, 30 * 60 * 1000);
-        return () => clearInterval(interval);
-      }, []);
-      
-      // Verileri yükle
-      const loadTransactions = async () => {
-        if (!currentUser) return;
-        setIsLoading(true);
-        try {
-          const { data, error } = await supabase
-            .from('transactions')
-            .select('*')
-            .eq('user_id', currentUser)
-            .order('date', { ascending: false });
-          if (error) throw error;
-          setTransactions(data || []);
-        } catch (e) { console.error('Yükleme hatası:', e); }
-        finally { setIsLoading(false); }
-      };
-      
-      useEffect(() => {
-        if (isLoggedIn && currentUser) loadTransactions();
-      }, [isLoggedIn, currentUser]);
-      
-      useEffect(() => { localStorage.setItem('butce_currency', selectedCurrency); }, [selectedCurrency]);
-      
-      const convertFromTRY = (amount, currency) => currency === 'TRY' ? amount : amount / exchangeRates[currency];
-      
-      const formatCurrency = (amount, code = 'TRY') => {
-        const cur = CURRENCIES.find(c => c.code === code) || CURRENCIES[0];
-        return new Intl.NumberFormat(cur.locale, {
-          style: 'currency', currency: code,
-          minimumFractionDigits: code === 'TRY' ? 0 : 2,
-          maximumFractionDigits: code === 'TRY' ? 0 : 2,
-        }).format(convertFromTRY(amount, code));
-      };
-      
-      const formatDate = (date) => new Date(date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
-      
-      const handleLogin = () => {
-        if (loginData.username === VALID_USERNAME && loginData.password === VALID_PASSWORD) {
-          setIsLoggedIn(true);
-          setCurrentUser(loginData.username);
-          localStorage.setItem('butce_logged_in', 'true');
-          localStorage.setItem('butce_current_user', loginData.username);
-          setLoginData({ username: '', password: '' });
-          setLoginError('');
-        } else {
-          setLoginError('Kullanıcı adı veya şifre hatalı!');
-        }
-      };
-      
-      const handleLogout = () => {
-        setIsLoggedIn(false);
-        setCurrentUser('');
-        setTransactions([]);
-        localStorage.setItem('butce_logged_in', 'false');
-        localStorage.removeItem('butce_current_user');
-      };
-      
-      const handleAddTransaction = async () => {
-        if (!newTransaction.category || !newTransaction.amount) return;
-        setIsSyncing(true);
-        try {
-          const { data, error } = await supabase
-            .from('transactions')
-            .insert([{
-              user_id: currentUser,
-              type: newTransaction.type,
-              category: newTransaction.category,
-              amount: parseFloat(newTransaction.amount),
-              description: newTransaction.description,
-              date: newTransaction.date,
-              account: newTransaction.account,
-            }])
-            .select()
-            .single();
-          if (error) throw error;
-          setTransactions([data, ...transactions]);
-          setNewTransaction({
-            type: 'expense', category: '', amount: '', description: '',
-            date: new Date().toISOString().split('T')[0], account: 'cash',
-          });
-          setShowAddModal(false);
-        } catch (e) { alert('Kaydetme hatası!'); console.error(e); }
-        finally { setIsSyncing(false); }
-      };
-      
-      const handleDeleteTransaction = async (id) => {
-        if (!confirm('Bu işlemi silmek istediğinize emin misiniz?')) return;
-        setIsSyncing(true);
-        try {
-          const { error } = await supabase.from('transactions').delete().eq('id', id);
-          if (error) throw error;
-          setTransactions(transactions.filter(t => t.id !== id));
-        } catch (e) { alert('Silme hatası!'); }
-        finally { setIsSyncing(false); }
-      };
-      
-      const accountFiltered = selectedAccount === 'all' ? transactions : transactions.filter(t => t.account === selectedAccount);
-      const totalIncome = accountFiltered.filter(t => t.type === 'income').reduce((s, t) => s + parseFloat(t.amount), 0);
-      const totalExpense = accountFiltered.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0);
-      const balance = totalIncome - totalExpense;
-      const cashBalance = transactions.filter(t => t.account === 'cash').reduce((s, t) => t.type === 'income' ? s + parseFloat(t.amount) : s - parseFloat(t.amount), 0);
-      const bankBalance = transactions.filter(t => t.account === 'bank').reduce((s, t) => t.type === 'income' ? s + parseFloat(t.amount) : s - parseFloat(t.amount), 0);
-      
-      const expenseByCategory = EXPENSE_CATEGORIES.map(cat => ({
-        ...cat,
-        value: accountFiltered.filter(t => t.type === 'expense' && t.category === cat.id).reduce((s, t) => s + parseFloat(t.amount), 0),
-      })).filter(c => c.value > 0);
-      
-      const incomeByCategory = INCOME_CATEGORIES.map(cat => ({
-        ...cat,
-        value: accountFiltered.filter(t => t.type === 'income' && t.category === cat.id).reduce((s, t) => s + parseFloat(t.amount), 0),
-      })).filter(c => c.value > 0);
-      
-      const filteredTransactions = transactions.filter(t => {
-        const typeMatch = filterType === 'all' || t.type === filterType;
-        const accountMatch = selectedAccount === 'all' || t.account === selectedAccount;
-        return typeMatch && accountMatch;
-      }).sort((a, b) => new Date(b.date) - new Date(a.date));
-      
-      const categories = newTransaction.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
-      
-      // Login Ekranı
-      if (!isLoggedIn) {
-        return (
-          <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-            <div style={{
-              background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.08)', borderRadius: 24, padding: '40px 32px',
-              width: '100%', maxWidth: 380,
-            }}>
-              <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>💸</div>
-                <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>Bütçe Takip</h1>
-                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>Giriş yaparak devam edin</p>
-              </div>
-              
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ display: 'block', marginBottom: 8, fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>Kullanıcı Adı</label>
-                <input
-                  type="text" placeholder="Kullanıcı adınızı girin"
-                  value={loginData.username}
-                  onChange={e => setLoginData({ ...loginData, username: e.target.value })}
-                  onKeyPress={e => e.key === 'Enter' && handleLogin()}
-                  style={{
-                    width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: 12, padding: '14px 16px', color: 'white', fontFamily: 'Outfit', fontSize: 15,
-                  }}
-                />
-              </div>
-              
-              <div style={{ marginBottom: 24 }}>
-                <label style={{ display: 'block', marginBottom: 8, fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>Şifre</label>
-                <input
-                  type="password" placeholder="Şifrenizi girin"
-                  value={loginData.password}
-                  onChange={e => setLoginData({ ...loginData, password: e.target.value })}
-                  onKeyPress={e => e.key === 'Enter' && handleLogin()}
-                  style={{
-                    width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: 12, padding: '14px 16px', color: 'white', fontFamily: 'Outfit', fontSize: 15,
-                  }}
-                />
-              </div>
-              
-              {loginError && (
-                <div style={{
-                  background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.3)',
-                  borderRadius: 10, padding: 12, marginBottom: 16, color: '#EF4444', fontSize: 13, textAlign: 'center',
-                }}>⚠️ {loginError}</div>
-              )}
-              
-              <button onClick={handleLogin} style={{
-                width: '100%', background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
-                border: 'none', color: 'white', fontFamily: 'Outfit', fontSize: 16, fontWeight: 600,
-                padding: 14, borderRadius: 12, cursor: 'pointer',
-              }}>Giriş Yap</button>
-              
-              <div style={{ marginTop: 20, padding: 12, background: 'rgba(34,197,94,0.1)', borderRadius: 10, textAlign: 'center' }}>
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>☁️ Verileriniz bulutta saklanır</span>
-              </div>
-            </div>
-          </div>
-        );
+        ratesLive = true;
+        updateRateInfo();
+      } catch(e) {
+        console.log('Rate fetch error:', e);
       }
-      
-      // Loading
-      if (isLoading) {
-        return (
-          <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
-            <div className="spinner" style={{ width: 40, height: 40, border: '3px solid rgba(99,102,241,0.3)', borderTopColor: '#6366F1', borderRadius: '50%' }}></div>
-            <p style={{ color: 'rgba(255,255,255,0.6)' }}>Veriler yükleniyor...</p>
-          </div>
-        );
-      }
-      
-      return (
-        <div style={{ padding: 16, paddingBottom: 32 }}>
-          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-            
-            {/* Sync göstergesi */}
-            {isSyncing && (
-              <div style={{
-                position: 'fixed', top: 16, right: 16, background: 'rgba(99,102,241,0.9)',
-                padding: '8px 16px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 8, zIndex: 1000, fontSize: 13,
-              }}>
-                <div className="spinner" style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%' }}></div>
-                Kaydediliyor...
-              </div>
-            )}
-            
-            {/* Header */}
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
-              <div>
-                <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 2 }}>💸 Bütçe Takip</h1>
-                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>☁️ {currentUser} olarak giriş yapıldı</p>
-              </div>
-              
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                {/* Hesap Seçici */}
-                <div style={{ display: 'flex', gap: 6, background: 'rgba(255,255,255,0.03)', padding: 4, borderRadius: 12 }}>
-                  {ACCOUNTS.map(acc => (
-                    <button key={acc.id} onClick={() => setSelectedAccount(acc.id)} style={{
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-                      padding: '8px 12px', borderRadius: 10, border: selectedAccount === acc.id ? `1px solid ${acc.color}40` : '1px solid transparent',
-                      background: selectedAccount === acc.id ? `${acc.color}20` : 'transparent',
-                      color: selectedAccount === acc.id ? '#fff' : 'rgba(255,255,255,0.5)',
-                      fontFamily: 'Outfit', fontSize: 11, fontWeight: 500, cursor: 'pointer', minWidth: 60,
-                    }}>
-                      <span style={{ fontSize: 16 }}>{acc.icon}</span>
-                      <span>{acc.name}</span>
-                      {acc.id !== 'all' && (
-                        <span style={{ fontFamily: 'Space Mono', fontSize: 9, color: (acc.id === 'cash' ? cashBalance : bankBalance) >= 0 ? '#22C55E' : '#EF4444' }}>
-                          {formatCurrency(acc.id === 'cash' ? cashBalance : bankBalance, selectedCurrency)}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-                
-                {/* Yeni Buton */}
-                <button onClick={() => setShowAddModal(true)} disabled={isSyncing} style={{
-                  background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)', border: 'none', color: 'white',
-                  fontFamily: 'Outfit', fontSize: 14, fontWeight: 600, padding: '12px 20px', borderRadius: 14,
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-                }}>➕ Yeni</button>
-                
-                {/* Para Birimi */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                  <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.05)', padding: 4, borderRadius: 10 }}>
-                    {CURRENCIES.map(cur => (
-                      <button key={cur.code} onClick={() => setSelectedCurrency(cur.code)} style={{
-                        display: 'flex', alignItems: 'center', gap: 4, padding: '8px 10px', borderRadius: 8, border: 'none',
-                        background: selectedCurrency === cur.code ? 'rgba(99,102,241,0.3)' : 'transparent',
-                        color: selectedCurrency === cur.code ? '#fff' : 'rgba(255,255,255,0.5)',
-                        fontFamily: 'Outfit', fontSize: 12, fontWeight: 500, cursor: 'pointer',
-                      }}>
-                        <span style={{ fontSize: 14 }}>{cur.flag}</span>{cur.code}
-                      </button>
-                    ))}
-                  </div>
-                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', fontFamily: 'Space Mono', display: 'flex', gap: 8 }}>
-                    <span>💱 1$ = ₺{exchangeRates.USD.toFixed(2)}</span>
-                    <span>1₽ = ₺{exchangeRates.RUB.toFixed(2)}</span>
-                    {ratesLive && <span style={{ color: 'rgba(34,197,94,0.8)' }}>✓ Canlı</span>}
-                  </div>
-                </div>
-                
-                {/* Çıkış */}
-                <button onClick={handleLogout} style={{
-                  background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.3)', color: '#EF4444',
-                  fontFamily: 'Outfit', fontSize: 12, fontWeight: 500, padding: '8px 12px', borderRadius: 8, cursor: 'pointer',
-                }}>🚪 Çıkış</button>
-              </div>
-            </header>
-            
-            {/* Özet Kartları */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
-              {[
-                { label: 'Bakiye', value: balance, color: '#6366F1', icon: '👛' },
-                { label: 'Gelir', value: totalIncome, color: '#22C55E', icon: '📈' },
-                { label: 'Gider', value: totalExpense, color: '#EF4444', icon: '📉' },
-              ].map((card, i) => (
-                <div key={i} style={{
-                  background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 20,
-                  borderTop: `3px solid ${card.color}`,
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                    <span style={{ fontSize: 24 }}>{card.icon}</span>
-                    <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>{card.label}</span>
-                  </div>
-                  <div style={{
-                    fontSize: 22, fontWeight: 700, fontFamily: 'Space Mono',
-                    color: i === 0 ? (balance >= 0 ? '#22C55E' : '#EF4444') : card.color,
-                  }}>{formatCurrency(card.value, selectedCurrency)}</div>
-                </div>
-              ))}
-            </div>
-            
-            {/* Tabs */}
-            <div style={{ display: 'flex', gap: 6, marginBottom: 20, background: 'rgba(255,255,255,0.03)', padding: 4, borderRadius: 14, width: 'fit-content' }}>
-              {[{ id: 'overview', label: '📊 Genel Bakış' }, { id: 'transactions', label: '📋 İşlemler' }].map(tab => (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
-                  background: activeTab === tab.id ? 'rgba(99,102,241,0.2)' : 'transparent',
-                  border: 'none', color: activeTab === tab.id ? '#fff' : 'rgba(255,255,255,0.5)',
-                  fontFamily: 'Outfit', fontSize: 13, fontWeight: 500, padding: '10px 16px', borderRadius: 10, cursor: 'pointer',
-                }}>{tab.label}</button>
-              ))}
-            </div>
-            
-            {/* İçerik */}
-            {activeTab === 'overview' ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
-                {/* Gider Dağılımı */}
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 20 }}>
-                  <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 20 }}>📤</span> Gider Dağılımı
-                  </h3>
-                  {expenseByCategory.length > 0 ? (
-                    <div>
-                      {expenseByCategory.map((cat, i) => (
-                        <div key={i} style={{
-                          display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px',
-                          background: 'rgba(255,255,255,0.03)', borderRadius: 10, marginBottom: 6,
-                        }}>
-                          <div style={{ width: 10, height: 10, borderRadius: '50%', background: cat.color }}></div>
-                          <span style={{ fontSize: 16 }}>{cat.icon}</span>
-                          <span style={{ flex: 1, fontSize: 13 }}>{cat.name}</span>
-                          <span style={{ fontFamily: 'Space Mono', fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
-                            {formatCurrency(cat.value, selectedCurrency)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div style={{ textAlign: 'center', padding: 30, color: 'rgba(255,255,255,0.4)' }}>Henüz gider kaydı yok</div>
-                  )}
-                </div>
-                
-                {/* Gelir Dağılımı */}
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 20 }}>
-                  <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 20 }}>📥</span> Gelir Dağılımı
-                  </h3>
-                  {incomeByCategory.length > 0 ? (
-                    <div>
-                      {incomeByCategory.map((cat, i) => (
-                        <div key={i} style={{
-                          display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px',
-                          background: 'rgba(255,255,255,0.03)', borderRadius: 10, marginBottom: 6,
-                        }}>
-                          <div style={{ width: 10, height: 10, borderRadius: '50%', background: cat.color }}></div>
-                          <span style={{ fontSize: 16 }}>{cat.icon}</span>
-                          <span style={{ flex: 1, fontSize: 13 }}>{cat.name}</span>
-                          <span style={{ fontFamily: 'Space Mono', fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
-                            {formatCurrency(cat.value, selectedCurrency)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div style={{ textAlign: 'center', padding: 30, color: 'rgba(255,255,255,0.4)' }}>Henüz gelir kaydı yok</div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 20 }}>
-                {/* Filtreler */}
-                <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-                  {[{ id: 'all', label: 'Tümü' }, { id: 'income', label: '💰 Gelirler' }, { id: 'expense', label: '💸 Giderler' }].map(f => (
-                    <button key={f.id} onClick={() => setFilterType(f.id)} style={{
-                      background: filterType === f.id ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)',
-                      border: filterType === f.id ? '1px solid #6366F1' : '1px solid rgba(255,255,255,0.1)',
-                      color: filterType === f.id ? 'white' : 'rgba(255,255,255,0.6)',
-                      fontFamily: 'Outfit', fontSize: 12, padding: '6px 12px', borderRadius: 16, cursor: 'pointer',
-                    }}>{f.label}</button>
-                  ))}
-                </div>
-                
-                {/* İşlem Listesi */}
-                <div style={{ maxHeight: 400, overflowY: 'auto' }}>
-                  {filteredTransactions.length > 0 ? (
-                    filteredTransactions.map(t => {
-                      const catList = t.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
-                      const cat = catList.find(c => c.id === t.category);
-                      const acc = ACCOUNTS.find(a => a.id === t.account);
-                      return (
-                        <div key={t.id} style={{
-                          display: 'flex', alignItems: 'center', padding: '14px 16px',
-                          background: 'rgba(255,255,255,0.02)', borderRadius: 14, marginBottom: 8,
-                        }}>
-                          <div style={{
-                            width: 40, height: 40, borderRadius: 12, background: `${cat?.color}22`,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, marginRight: 12,
-                          }}>{cat?.icon}</div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 500, marginBottom: 2, fontSize: 14 }}>{t.description || cat?.name}</div>
-                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                              <span>📅 {formatDate(t.date)}</span>
-                              <span style={{ background: `${acc?.color}30`, padding: '1px 6px', borderRadius: 4, fontSize: 10 }}>
-                                {acc?.icon} {acc?.name}
-                              </span>
-                            </div>
-                          </div>
-                          <div style={{
-                            fontFamily: 'Space Mono', fontWeight: 600, fontSize: 14,
-                            color: t.type === 'income' ? '#22C55E' : '#EF4444', marginRight: 8,
-                          }}>{t.type === 'income' ? '+' : '-'}{formatCurrency(parseFloat(t.amount), selectedCurrency)}</div>
-                          <button onClick={() => handleDeleteTransaction(t.id)} disabled={isSyncing} style={{
-                            background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.3)',
-                            cursor: 'pointer', padding: 8, borderRadius: 8, fontSize: 16,
-                          }}>🗑️</button>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div style={{ textAlign: 'center', padding: '40px 20px', color: 'rgba(255,255,255,0.4)' }}>
-                      <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
-                      <p>Henüz işlem kaydı yok</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            
-            {/* Yeni İşlem Modal */}
-            {showAddModal && (
-              <div onClick={() => setShowAddModal(false)} style={{
-                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16,
-              }}>
-                <div onClick={e => e.stopPropagation()} style={{
-                  background: 'linear-gradient(135deg, #1A1A2E 0%, #16213E 100%)',
-                  border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: 24,
-                  width: '100%', maxWidth: 420, maxHeight: '90vh', overflowY: 'auto',
-                }}>
-                  <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 20, textAlign: 'center' }}>✨ Yeni İşlem Ekle</h2>
-                  
-                  {/* Tür Seçimi */}
-                  <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 4, gap: 4, marginBottom: 16 }}>
-                    {[{ id: 'expense', label: '💸 Gider', color: 'rgba(239,68,68,0.3)' }, { id: 'income', label: '💰 Gelir', color: 'rgba(34,197,94,0.3)' }].map(type => (
-                      <button key={type.id} onClick={() => setNewTransaction({ ...newTransaction, type: type.id, category: '' })} style={{
-                        flex: 1, padding: 12, border: 'none', borderRadius: 10, fontFamily: 'Outfit', fontSize: 14, fontWeight: 500, cursor: 'pointer',
-                        background: newTransaction.type === type.id ? type.color : 'transparent',
-                        color: newTransaction.type === type.id ? 'white' : 'rgba(255,255,255,0.5)',
-                      }}>{type.label}</button>
-                    ))}
-                  </div>
-                  
-                  {/* Tutar */}
-                  <div style={{ marginBottom: 16 }}>
-                    <label style={{ display: 'block', marginBottom: 6, fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
-                      Tutar ({CURRENCIES.find(c => c.code === selectedCurrency)?.symbol})
-                    </label>
-                    <input type="number" placeholder="0" value={newTransaction.amount}
-                      onChange={e => setNewTransaction({ ...newTransaction, amount: e.target.value })}
-                      style={{
-                        width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: 12, padding: '14px 16px', color: 'white', fontFamily: 'Space Mono', fontSize: 24, textAlign: 'center',
-                      }}
-                    />
-                  </div>
-                  
-                  {/* Hesap */}
-                  <div style={{ marginBottom: 16 }}>
-                    <label style={{ display: 'block', marginBottom: 6, fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>Hesap</label>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      {ACCOUNTS.filter(a => a.id !== 'all').map(acc => (
-                        <button key={acc.id} onClick={() => setNewTransaction({ ...newTransaction, account: acc.id })} style={{
-                          flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: 12, borderRadius: 10,
-                          border: newTransaction.account === acc.id ? `1px solid ${acc.color}` : '1px solid rgba(255,255,255,0.1)',
-                          background: newTransaction.account === acc.id ? `${acc.color}25` : 'rgba(255,255,255,0.02)',
-                          color: newTransaction.account === acc.id ? '#fff' : 'rgba(255,255,255,0.5)',
-                          fontFamily: 'Outfit', fontSize: 13, fontWeight: 500, cursor: 'pointer',
-                        }}>
-                          <span style={{ fontSize: 16 }}>{acc.icon}</span>{acc.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Kategori */}
-                  <div style={{ marginBottom: 16 }}>
-                    <label style={{ display: 'block', marginBottom: 6, fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>Kategori</label>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                      {categories.map(cat => (
-                        <button key={cat.id} onClick={() => setNewTransaction({ ...newTransaction, category: cat.id })} style={{
-                          padding: '10px 6px', border: newTransaction.category === cat.id ? `1px solid ${cat.color}` : '1px solid rgba(255,255,255,0.1)',
-                          borderRadius: 10, background: newTransaction.category === cat.id ? `${cat.color}20` : 'rgba(255,255,255,0.02)',
-                          color: newTransaction.category === cat.id ? 'white' : 'rgba(255,255,255,0.7)',
-                          fontFamily: 'Outfit', fontSize: 11, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                        }}>
-                          <span style={{ fontSize: 18 }}>{cat.icon}</span>{cat.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Açıklama */}
-                  <div style={{ marginBottom: 16 }}>
-                    <label style={{ display: 'block', marginBottom: 6, fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>Açıklama (Opsiyonel)</label>
-                    <input type="text" placeholder="Örn: Haftalık market" value={newTransaction.description}
-                      onChange={e => setNewTransaction({ ...newTransaction, description: e.target.value })}
-                      style={{
-                        width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: 12, padding: '14px 16px', color: 'white', fontFamily: 'Outfit', fontSize: 15,
-                      }}
-                    />
-                  </div>
-                  
-                  {/* Tarih */}
-                  <div style={{ marginBottom: 20 }}>
-                    <label style={{ display: 'block', marginBottom: 6, fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>Tarih</label>
-                    <input type="date" value={newTransaction.date}
-                      onChange={e => setNewTransaction({ ...newTransaction, date: e.target.value })}
-                      style={{
-                        width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: 12, padding: '14px 16px', color: 'white', fontFamily: 'Outfit', fontSize: 15,
-                      }}
-                    />
-                  </div>
-                  
-                  {/* Butonlar */}
-                  <div style={{ display: 'flex', gap: 10 }}>
-                    <button onClick={() => setShowAddModal(false)} style={{
-                      flex: 1, padding: 14, borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)',
-                      background: 'transparent', color: 'rgba(255,255,255,0.6)', fontFamily: 'Outfit', fontSize: 14, cursor: 'pointer',
-                    }}>İptal</button>
-                    <button onClick={handleAddTransaction} disabled={!newTransaction.category || !newTransaction.amount || isSyncing} style={{
-                      flex: 2, padding: 14, borderRadius: 12, border: 'none',
-                      background: newTransaction.category && newTransaction.amount && !isSyncing ? 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)' : 'rgba(255,255,255,0.1)',
-                      color: newTransaction.category && newTransaction.amount && !isSyncing ? 'white' : 'rgba(255,255,255,0.3)',
-                      fontFamily: 'Outfit', fontSize: 14, fontWeight: 600, cursor: newTransaction.category && newTransaction.amount && !isSyncing ? 'pointer' : 'not-allowed',
-                    }}>{isSyncing ? 'Kaydediliyor...' : 'Kaydet'}</button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      );
     }
     
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    // Login
+    function handleLogin() {
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
+      
+      if (user === VALID_USER && pass === VALID_PASS) {
+        currentUser = user;
+        localStorage.setItem('butce_logged_in', 'true');
+        localStorage.setItem('butce_current_user', user);
+        document.getElementById('loginError').classList.add('hidden');
+        showLoading();
+        loadData();
+      } else {
+        document.getElementById('loginError').textContent = '⚠️ Kullanıcı adı veya şifre hatalı!';
+        document.getElementById('loginError').classList.remove('hidden');
+      }
+    }
+    
+    // Logout
+    function handleLogout() {
+      currentUser = '';
+      transactions = [];
+      localStorage.setItem('butce_logged_in', 'false');
+      localStorage.removeItem('butce_current_user');
+      document.getElementById('mainApp').classList.add('hidden');
+      document.getElementById('loginPage').classList.remove('hidden');
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+    }
+    
+    // Show loading
+    function showLoading() {
+      document.getElementById('loginPage').classList.add('hidden');
+      document.getElementById('loadingPage').classList.remove('hidden');
+    }
+    
+    // Load data
+    async function loadData() {
+      try {
+        const { data, error } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('user_id', currentUser)
+          .order('date', { ascending: false });
+        
+        if (error) throw error;
+        transactions = data || [];
+      } catch(e) {
+        console.error('Load error:', e);
+        transactions = [];
+      }
+      
+      document.getElementById('loadingPage').classList.add('hidden');
+      document.getElementById('mainApp').classList.remove('hidden');
+      renderApp();
+    }
+    
+    // Format currency
+    function formatCurrency(amount, code) {
+      code = code || selectedCurrency;
+      const cur = CURRENCIES.find(c => c.code === code);
+      const converted = code === 'TRY' ? amount : amount / exchangeRates[code];
+      return new Intl.NumberFormat(cur.locale, {
+        style: 'currency',
+        currency: code,
+        minimumFractionDigits: code === 'TRY' ? 0 : 2,
+        maximumFractionDigits: code === 'TRY' ? 0 : 2,
+      }).format(converted);
+    }
+    
+    // Format date
+    function formatDate(date) {
+      return new Date(date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+    }
+    
+    // Calculate balances
+    function getBalances() {
+      const filtered = selectedAccount === 'all' ? transactions : transactions.filter(t => t.account === selectedAccount);
+      const income = filtered.filter(t => t.type === 'income').reduce((s, t) => s + parseFloat(t.amount), 0);
+      const expense = filtered.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0);
+      const cash = transactions.filter(t => t.account === 'cash').reduce((s, t) => t.type === 'income' ? s + parseFloat(t.amount) : s - parseFloat(t.amount), 0);
+      const bank = transactions.filter(t => t.account === 'bank').reduce((s, t) => t.type === 'income' ? s + parseFloat(t.amount) : s - parseFloat(t.amount), 0);
+      return { income, expense, balance: income - expense, cash, bank };
+    }
+    
+    // Render app
+    function renderApp() {
+      const bal = getBalances();
+      
+      // User info
+      document.getElementById('userInfo').textContent = '☁️ ' + currentUser + ' olarak giriş yapıldı';
+      
+      // Account selector
+      let accHtml = '';
+      ACCOUNTS.forEach(acc => {
+        const isActive = selectedAccount === acc.id;
+        let balanceHtml = '';
+        if (acc.id === 'cash') {
+          balanceHtml = '<span class="balance ' + (bal.cash >= 0 ? 'balance-positive' : 'balance-negative') + '">' + formatCurrency(bal.cash) + '</span>';
+        } else if (acc.id === 'bank') {
+          balanceHtml = '<span class="balance ' + (bal.bank >= 0 ? 'balance-positive' : 'balance-negative') + '">' + formatCurrency(bal.bank) + '</span>';
+        }
+        accHtml += '<button class="account-btn ' + (isActive ? 'active' : '') + '" onclick="setAccount(\'' + acc.id + '\')">' +
+          '<span class="icon">' + acc.icon + '</span>' +
+          '<span>' + acc.name + '</span>' +
+          balanceHtml +
+          '</button>';
+      });
+      document.getElementById('accountSelector').innerHTML = accHtml;
+      
+      // Currency buttons
+      let curHtml = '';
+      CURRENCIES.forEach(cur => {
+        const isActive = selectedCurrency === cur.code;
+        curHtml += '<button class="currency-btn ' + (isActive ? 'active' : '') + '" onclick="setCurrency(\'' + cur.code + '\')">' +
+          '<span class="flag">' + cur.flag + '</span>' + cur.code +
+          '</button>';
+      });
+      document.getElementById('currencyButtons').innerHTML = curHtml;
+      updateRateInfo();
+      
+      // Summary cards
+      const cards = [
+        { label: 'Bakiye', value: bal.balance, color: '#6366F1', icon: '👛', valueColor: bal.balance >= 0 ? '#22C55E' : '#EF4444' },
+        { label: 'Gelir', value: bal.income, color: '#22C55E', icon: '📈', valueColor: '#22C55E' },
+        { label: 'Gider', value: bal.expense, color: '#EF4444', icon: '📉', valueColor: '#EF4444' },
+      ];
+      let cardsHtml = '';
+      cards.forEach(card => {
+        cardsHtml += '<div class="card" style="--card-color: ' + card.color + '">' +
+          '<div class="card-header"><span class="card-icon">' + card.icon + '</span><span class="card-label">' + card.label + '</span></div>' +
+          '<div class="card-value" style="color: ' + card.valueColor + '">' + formatCurrency(card.value) + '</div>' +
+          '</div>';
+      });
+      document.getElementById('summaryCards').innerHTML = cardsHtml;
+      
+      // Render active tab
+      if (activeTab === 'overview') {
+        renderOverview();
+      } else {
+        renderTransactions();
+      }
+    }
+    
+    // Update rate info
+    function updateRateInfo() {
+      document.getElementById('rateInfo').innerHTML = '💱 1$ = ₺' + exchangeRates.USD.toFixed(2) + 
+        ' &nbsp; 1₽ = ₺' + exchangeRates.RUB.toFixed(2) + 
+        (ratesLive ? ' <span class="rate-live">✓ Canlı</span>' : '');
+    }
+    
+    // Render overview
+    function renderOverview() {
+      const filtered = selectedAccount === 'all' ? transactions : transactions.filter(t => t.account === selectedAccount);
+      
+      // Expense by category
+      const expenseByCat = EXPENSE_CATEGORIES.map(cat => ({
+        ...cat,
+        value: filtered.filter(t => t.type === 'expense' && t.category === cat.id).reduce((s, t) => s + parseFloat(t.amount), 0)
+      })).filter(c => c.value > 0);
+      
+      // Income by category
+      const incomeByCat = INCOME_CATEGORIES.map(cat => ({
+        ...cat,
+        value: filtered.filter(t => t.type === 'income' && t.category === cat.id).reduce((s, t) => s + parseFloat(t.amount), 0)
+      })).filter(c => c.value > 0);
+      
+      let html = '';
+      
+      // Expense box
+      html += '<div class="content-box"><h3><span class="icon">📤</span> Gider Dağılımı</h3>';
+      if (expenseByCat.length > 0) {
+        expenseByCat.forEach(cat => {
+          html += '<div class="legend-item">' +
+            '<div class="legend-dot" style="background: ' + cat.color + '"></div>' +
+            '<span class="legend-icon">' + cat.icon + '</span>' +
+            '<span class="legend-name">' + cat.name + '</span>' +
+            '<span class="legend-value">' + formatCurrency(cat.value) + '</span>' +
+            '</div>';
+        });
+      } else {
+        html += '<div class="empty-state">Henüz gider kaydı yok</div>';
+      }
+      html += '</div>';
+      
+      // Income box
+      html += '<div class="content-box"><h3><span class="icon">📥</span> Gelir Dağılımı</h3>';
+      if (incomeByCat.length > 0) {
+        incomeByCat.forEach(cat => {
+          html += '<div class="legend-item">' +
+            '<div class="legend-dot" style="background: ' + cat.color + '"></div>' +
+            '<span class="legend-icon">' + cat.icon + '</span>' +
+            '<span class="legend-name">' + cat.name + '</span>' +
+            '<span class="legend-value">' + formatCurrency(cat.value) + '</span>' +
+            '</div>';
+        });
+      } else {
+        html += '<div class="empty-state">Henüz gelir kaydı yok</div>';
+      }
+      html += '</div>';
+      
+      document.getElementById('overviewContent').innerHTML = html;
+      document.getElementById('overviewContent').classList.remove('hidden');
+      document.getElementById('transactionsContent').classList.add('hidden');
+    }
+    
+    // Render transactions
+    function renderTransactions() {
+      const filtered = transactions.filter(t => {
+        const typeMatch = filterType === 'all' || t.type === filterType;
+        const accMatch = selectedAccount === 'all' || t.account === selectedAccount;
+        return typeMatch && accMatch;
+      }).sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      let html = '';
+      
+      // Filter bar
+      html += '<div class="filter-bar">';
+      [{ id: 'all', label: 'Tümü' }, { id: 'income', label: '💰 Gelirler' }, { id: 'expense', label: '💸 Giderler' }].forEach(f => {
+        html += '<button class="filter-btn ' + (filterType === f.id ? 'active' : '') + '" onclick="setFilter(\'' + f.id + '\')">' + f.label + '</button>';
+      });
+      html += '</div>';
+      
+      // Transaction list
+      html += '<div class="transaction-list">';
+      if (filtered.length > 0) {
+        filtered.forEach(t => {
+          const catList = t.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+          const cat = catList.find(c => c.id === t.category) || { icon: '❓', name: 'Bilinmiyor', color: '#666' };
+          const acc = ACCOUNTS.find(a => a.id === t.account) || ACCOUNTS[0];
+          
+          html += '<div class="transaction-item">' +
+            '<div class="transaction-icon" style="background: ' + cat.color + '22">' + cat.icon + '</div>' +
+            '<div class="transaction-info">' +
+            '<div class="transaction-title">' + (t.description || cat.name) + '</div>' +
+            '<div class="transaction-meta">📅 ' + formatDate(t.date) + 
+            ' <span class="transaction-tag" style="background: ' + acc.color + '30">' + acc.icon + ' ' + acc.name + '</span></div>' +
+            '</div>' +
+            '<div class="transaction-amount ' + t.type + '">' + (t.type === 'income' ? '+' : '-') + formatCurrency(parseFloat(t.amount)) + '</div>' +
+            '<button class="transaction-delete" onclick="deleteTransaction(' + t.id + ')">🗑️</button>' +
+            '</div>';
+        });
+      } else {
+        html += '<div class="empty-state"><div class="icon">📭</div><p>Henüz işlem kaydı yok</p></div>';
+      }
+      html += '</div>';
+      
+      document.getElementById('transactionsContent').innerHTML = html;
+      document.getElementById('transactionsContent').classList.remove('hidden');
+      document.getElementById('overviewContent').classList.add('hidden');
+    }
+    
+    // Set account
+    function setAccount(acc) {
+      selectedAccount = acc;
+      renderApp();
+    }
+    
+    // Set currency
+    function setCurrency(cur) {
+      selectedCurrency = cur;
+      localStorage.setItem('butce_currency', cur);
+      renderApp();
+    }
+    
+    // Set filter
+    function setFilter(type) {
+      filterType = type;
+      renderTransactions();
+    }
+    
+    // Switch tab
+    function switchTab(tab) {
+      activeTab = tab;
+      document.getElementById('tabOverview').classList.toggle('active', tab === 'overview');
+      document.getElementById('tabTransactions').classList.toggle('active', tab === 'transactions');
+      if (tab === 'overview') {
+        renderOverview();
+      } else {
+        renderTransactions();
+      }
+    }
+    
+    // Modal functions
+    function openModal() {
+      newType = 'expense';
+      newAccount = 'cash';
+      newCategory = '';
+      document.getElementById('amount').value = '';
+      document.getElementById('description').value = '';
+      document.getElementById('date').value = new Date().toISOString().split('T')[0];
+      renderModal();
+      document.getElementById('addModal').classList.remove('hidden');
+    }
+    
+    function closeModal() {
+      document.getElementById('addModal').classList.add('hidden');
+    }
+    
+    function renderModal() {
+      // Type buttons
+      document.getElementById('typeExpense').className = 'type-btn expense ' + (newType === 'expense' ? 'active' : '');
+      document.getElementById('typeIncome').className = 'type-btn income ' + (newType === 'income' ? 'active' : '');
+      
+      // Currency symbol
+      const cur = CURRENCIES.find(c => c.code === selectedCurrency);
+      document.getElementById('currencySymbol').textContent = cur.symbol;
+      
+      // Account toggle
+      let accHtml = '';
+      ACCOUNTS.filter(a => a.id !== 'all').forEach(acc => {
+        const isActive = newAccount === acc.id;
+        accHtml += '<button class="account-toggle-btn ' + (isActive ? 'active' : '') + '" ' +
+          'style="--acc-color: ' + acc.color + '; --acc-bg: ' + acc.color + '25" ' +
+          'onclick="setNewAccount(\'' + acc.id + '\')">' +
+          '<span>' + acc.icon + '</span>' + acc.name +
+          '</button>';
+      });
+      document.getElementById('accountToggle').innerHTML = accHtml;
+      
+      // Categories
+      const cats = newType === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+      let catHtml = '';
+      cats.forEach(cat => {
+        const isActive = newCategory === cat.id;
+        catHtml += '<button class="category-btn ' + (isActive ? 'active' : '') + '" ' +
+          'style="--cat-color: ' + cat.color + '; --cat-bg: ' + cat.color + '20" ' +
+          'onclick="setNewCategory(\'' + cat.id + '\')">' +
+          '<span class="icon">' + cat.icon + '</span>' + cat.name +
+          '</button>';
+      });
+      document.getElementById('categoryGrid').innerHTML = catHtml;
+      
+      // Save button state
+      updateSaveButton();
+    }
+    
+    function setType(type) {
+      newType = type;
+      newCategory = '';
+      renderModal();
+    }
+    
+    function setNewAccount(acc) {
+      newAccount = acc;
+      renderModal();
+    }
+    
+    function setNewCategory(cat) {
+      newCategory = cat;
+      renderModal();
+    }
+    
+    function updateSaveButton() {
+      const amount = document.getElementById('amount').value;
+      const canSave = newCategory && amount && parseFloat(amount) > 0;
+      document.getElementById('saveBtn').disabled = !canSave;
+    }
+    
+    // Add event listener for amount input
+    document.getElementById('amount').addEventListener('input', updateSaveButton);
+    
+    // Save transaction
+    async function saveTransaction() {
+      const amount = document.getElementById('amount').value;
+      const description = document.getElementById('description').value;
+      const date = document.getElementById('date').value;
+      
+      if (!newCategory || !amount) return;
+      
+      document.getElementById('syncIndicator').classList.remove('hidden');
+      document.getElementById('saveBtn').disabled = true;
+      
+      try {
+        const { data, error } = await supabase
+          .from('transactions')
+          .insert([{
+            user_id: currentUser,
+            type: newType,
+            category: newCategory,
+            amount: parseFloat(amount),
+            description: description,
+            date: date,
+            account: newAccount,
+          }])
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        transactions.unshift(data);
+        closeModal();
+        renderApp();
+      } catch(e) {
+        alert('Kaydetme hatası: ' + e.message);
+        console.error(e);
+      }
+      
+      document.getElementById('syncIndicator').classList.add('hidden');
+    }
+    
+    // Delete transaction
+    async function deleteTransaction(id) {
+      if (!confirm('Bu işlemi silmek istediğinize emin misiniz?')) return;
+      
+      document.getElementById('syncIndicator').classList.remove('hidden');
+      
+      try {
+        const { error } = await supabase.from('transactions').delete().eq('id', id);
+        if (error) throw error;
+        transactions = transactions.filter(t => t.id !== id);
+        renderApp();
+      } catch(e) {
+        alert('Silme hatası: ' + e.message);
+      }
+      
+      document.getElementById('syncIndicator').classList.add('hidden');
+    }
   </script>
 </body>
 </html>
