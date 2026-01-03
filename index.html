@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0F0F1A">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>💸 Bütçe Takip</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Outfit', -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0F0F1A 0%, #1A1A2E 50%, #16213E 100%);
+      min-height: 100vh;
+      color: #E8E8E8;
+    }
+    .hidden { display: none !important; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 16px; }
+    
+    /* Login */
+    .login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .login-box {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px; padding: 40px 32px; width: 100%; max-width: 380px;
+    }
+    .login-title { text-align: center; margin-bottom: 32px; }
+    .login-title .icon { font-size: 48px; margin-bottom: 12px; }
+    .login-title h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+    .login-title p { color: rgba(255,255,255,0.5); font-size: 14px; }
+    
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 8px; font-size: 13px; color: rgba(255,255,255,0.6); }
+    .form-group input {
+      width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px; padding: 14px 16px; color: white; font-family: 'Outfit', sans-serif; font-size: 15px;
+    }
+    .form-group input:focus { outline: none; border-color: #6366F1; background: rgba(99,102,241,0.1); }
+    .form-group input::placeholder { color: rgba(255,255,255,0.3); }
+    
+    .error-msg {
+      background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 10px; padding: 12px; margin-bottom: 16px; color: #EF4444; font-size: 13px; text-align: center;
+    }
+    
+    .btn-primary {
+      width: 100%; background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+      border: none; color: white; font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 600;
+      padding: 14px; border-radius: 12px; cursor: pointer;
+    }
+    .btn-primary:hover { opacity: 0.9; }
+    
+    .cloud-note {
+      margin-top: 20px; padding: 12px; background: rgba(34,197,94,0.1);
+      border-radius: 10px; text-align: center; font-size: 12px; color: rgba(255,255,255,0.5);
+    }
+    
+    /* Header */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+    .header-title h1 { font-size: 24px; font-weight: 700; margin-bottom: 2px; }
+    .header-title p { color: rgba(255,255,255,0.4); font-size: 12px; }
+    .header-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    
+    /* Buttons */
+    .btn { border: none; font-family: 'Outfit', sans-serif; font-weight: 500; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; }
+    .btn-add { background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%); color: white; padding: 12px 20px; border-radius: 14px; font-size: 14px; font-weight: 600; }
+    .btn-logout { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3); color: #EF4444; }
+    
+    /* Account selector */
+    .account-selector { display: flex; gap: 6px; background: rgba(255,255,255,0.03); padding: 4px; border-radius: 12px; }
+    .account-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 8px 12px; border-radius: 10px; border: 1px solid transparent;
+      background: transparent; color: rgba(255,255,255,0.5);
+      font-family: 'Outfit', sans-serif; font-size: 11px; cursor: pointer; min-width: 60px;
+    }
+    .account-btn.active { background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.4); color: white; }
+    .account-btn .icon { font-size: 16px; }
+    .account-btn .balance { font-family: 'Space Mono', monospace; font-size: 9px; }
+    .balance-positive { color: #22C55E; }
+    .balance-negative { color: #EF4444; }
+    
+    /* Currency selector */
+    .currency-selector { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .currency-buttons { display: flex; gap: 4px; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 10px; }
+    .currency-btn {
+      display: flex; align-items: center; gap: 4px; padding: 8px 10px; border-radius: 8px;
+      border: none; background: transparent; color: rgba(255,255,255,0.5);
+      font-family: 'Outfit', sans-serif; font-size: 12px; cursor: pointer;
+    }
+    .currency-btn.active { background: rgba(99,102,241,0.3); color: white; }
+    .currency-btn .flag { font-size: 14px; }
+    .rate-info { font-size: 9px; color: rgba(255,255,255,0.4); font-family: 'Space Mono', monospace; }
+    .rate-live { color: rgba(34,197,94,0.8); }
+    
+    /* Cards */
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .card {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px; padding: 20px; position: relative; overflow: hidden;
+    }
+    .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--card-color); opacity: 0.8; }
+    .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .card-icon { font-size: 24px; }
+    .card-label { color: rgba(255,255,255,0.6); font-size: 12px; }
+    .card-value { font-size: 22px; font-weight: 700; font-family: 'Space Mono', monospace; }
+    
+    /* Tabs */
+    .tabs { display: flex; gap: 6px; margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 4px; border-radius: 14px; width: fit-content; }
+    .tab-btn {
+      background: transparent; border: none; color: rgba(255,255,255,0.5);
+      font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500;
+      padding: 10px 16px; border-radius: 10px; cursor: pointer;
+    }
+    .tab-btn.active { background: rgba(99,102,241,0.2); color: white; }
+    
+    /* Content box */
+    .content-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 20px; }
+    .content-box h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .content-box h3 .icon { font-size: 20px; }
+    .distribution-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+    
+    /* Legend item */
+    .legend-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: rgba(255,255,255,0.03); border-radius: 10px; margin-bottom: 6px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .legend-icon { font-size: 16px; }
+    .legend-name { flex: 1; font-size: 13px; }
+    .legend-value { font-family: 'Space Mono', monospace; font-size: 12px; color: rgba(255,255,255,0.6); }
+    
+    /* Filter */
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-btn {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.6); font-family: 'Outfit', sans-serif; font-size: 12px;
+      padding: 6px 12px; border-radius: 16px; cursor: pointer;
+    }
+    .filter-btn.active { background: rgba(99,102,241,0.2); border-color: #6366F1; color: white; }
+    
+    /* Transaction */
+    .transaction-list { max-height: 400px; overflow-y: auto; }
+    .transaction-item { display: flex; align-items: center; padding: 14px 16px; background: rgba(255,255,255,0.02); border-radius: 14px; margin-bottom: 8px; }
+    .transaction-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-right: 12px; }
+    .transaction-info { flex: 1; }
+    .transaction-title { font-weight: 500; font-size: 14px; margin-bottom: 2px; }
+    .transaction-meta { font-size: 11px; color: rgba(255,255,255,0.4); display: flex; gap: 6px; flex-wrap: wrap; }
+    .transaction-tag { background: rgba(255,255,255,0.1); padding: 1px 6px; border-radius: 4px; font-size: 10px; }
+    .transaction-amount { font-family: 'Space Mono', monospace; font-weight: 600; font-size: 14px; margin-right: 8px; }
+    .transaction-amount.income { color: #22C55E; }
+    .transaction-amount.expense { color: #EF4444; }
+    .transaction-delete { background: transparent; border: none; color: rgba(255,255,255,0.3); cursor: pointer; padding: 8px; font-size: 16px; }
+    .transaction-delete:hover { color: #EF4444; }
+    
+    .empty-state { text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.4); }
+    .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+    
+    /* Modal */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+    .modal-content { background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 24px; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; }
+    .modal-title { font-size: 20px; font-weight: 600; margin-bottom: 20px; text-align: center; }
+    
+    /* Type toggle */
+    .type-toggle { display: flex; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 4px; gap: 4px; margin-bottom: 16px; }
+    .type-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; background: transparent; color: rgba(255,255,255,0.5); }
+    .type-btn.active.expense { background: rgba(239,68,68,0.3); color: white; }
+    .type-btn.active.income { background: rgba(34,197,94,0.3); color: white; }
+    
+    /* Account toggle */
+    .account-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+    .account-toggle-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.5); font-family: 'Outfit', sans-serif; font-size: 13px; cursor: pointer; }
+    .account-toggle-btn.active { border-color: var(--acc-color); background: var(--acc-bg); color: white; }
+    
+    /* Category grid */
+    .category-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+    .category-btn { padding: 10px 6px; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.7); font-family: 'Outfit', sans-serif; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .category-btn:hover { background: rgba(255,255,255,0.08); }
+    .category-btn.active { border-color: var(--cat-color); background: var(--cat-bg); color: white; }
+    .category-btn .icon { font-size: 18px; }
+    
+    /* Modal buttons */
+    .modal-actions { display: flex; gap: 10px; }
+    .modal-btn { flex: 1; padding: 14px; border-radius: 12px; font-family: 'Outfit', sans-serif; font-size: 14px; cursor: pointer; }
+    .modal-btn-cancel { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
+    .modal-btn-save { flex: 2; background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%); border: none; color: white; font-weight: 600; }
+    .modal-btn-save:disabled { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.3); cursor: not-allowed; }
+    
+    /* Sync indicator */
+    .sync-indicator { position: fixed; top: 16px; right: 16px; background: rgba(99,102,241,0.9); padding: 8px 16px; border-radius: 20px; display: flex; align-items: center; gap: 8px; z-index: 1001; font-size: 13px; }
+    
+    /* Loading */
+    .loading-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px; }
+    
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .spinner { width: 40px; height: 40px; border: 3px solid rgba(99,102,241,0.3); border-top-color: #6366F1; border-radius: 50%; animation: spin 1s linear infinite; }
+    .spinner-small { width: 14px; height: 14px; border-width: 2px; }
+  </style>
+</head>
+<body>
+  
+  <!-- Login Page -->
+  <div id="loginPage" class="login-page">
+    <div class="login-box">
+      <div class="login-title">
+        <div class="icon">💸</div>
+        <h1>Bütçe Takip</h1>
+        <p>Giriş yaparak devam edin</p>
+      </div>
+      <div class="form-group">
+        <label>Kullanıcı Adı</label>
+        <input type="text" id="username" placeholder="Kullanıcı adınızı girin">
+      </div>
+      <div class="form-group">
+        <label>Şifre</label>
+        <input type="password" id="password" placeholder="Şifrenizi girin">
+      </div>
+      <div id="loginError" class="error-msg hidden"></div>
+      <button class="btn-primary" id="loginBtn">Giriş Yap</button>
+      <div class="cloud-note">☁️ Verileriniz bulutta saklanır</div>
+    </div>
+  </div>
+  
+  <!-- Loading Page -->
+  <div id="loadingPage" class="loading-page hidden">
+    <div class="spinner"></div>
+    <p style="color: rgba(255,255,255,0.6);">Veriler yükleniyor...</p>
+  </div>
+  
+  <!-- Main App -->
+  <div id="mainApp" class="container hidden">
+    <div id="syncIndicator" class="sync-indicator hidden">
+      <div class="spinner spinner-small"></div>
+      Kaydediliyor...
+    </div>
+    
+    <header class="header">
+      <div class="header-title">
+        <h1>💸 Bütçe Takip</h1>
+        <p id="userInfo">☁️ Yükleniyor...</p>
+      </div>
+      <div class="header-controls">
+        <div class="account-selector" id="accountSelector"></div>
+        <button class="btn btn-add" id="addBtn">➕ Yeni</button>
+        <div class="currency-selector">
+          <div class="currency-buttons" id="currencyButtons"></div>
+          <div class="rate-info" id="rateInfo"></div>
+        </div>
+        <button class="btn btn-logout" id="logoutBtn">🚪 Çıkış</button>
+      </div>
+    </header>
+    
+    <div class="cards" id="summaryCards"></div>
+    
+    <div class="tabs">
+      <button class="tab-btn active" id="tabOverview">📊 Genel Bakış</button>
+      <button class="tab-btn" id="tabTransactions">📋 İşlemler</button>
+    </div>
+    
+    <div id="overviewContent" class="distribution-grid"></div>
+    <div id="transactionsContent" class="content-box hidden"></div>
+  </div>
+  
+  <!-- Add Modal -->
+  <div id="addModal" class="modal-overlay hidden">
+    <div class="modal-content" id="modalContent">
+      <h2 class="modal-title">✨ Yeni İşlem Ekle</h2>
+      <div class="type-toggle">
+        <button class="type-btn expense active" id="typeExpense">💸 Gider</button>
+        <button class="type-btn income" id="typeIncome">💰 Gelir</button>
+      </div>
+      <div class="form-group">
+        <label>Tutar (<span id="currencySymbol">₺</span>)</label>
+        <input type="number" id="amount" placeholder="0" style="font-size: 24px; text-align: center; font-family: 'Space Mono', monospace;">
+      </div>
+      <div class="form-group">
+        <label>Hesap</label>
+        <div class="account-toggle" id="accountToggle"></div>
+      </div>
+      <div class="form-group">
+        <label>Kategori</label>
+        <div class="category-grid" id="categoryGrid"></div>
+      </div>
+      <div class="form-group">
+        <label>Açıklama (Opsiyonel)</label>
+        <input type="text" id="description" placeholder="Örn: Haftalık market">
+      </div>
+      <div class="form-group">
+        <label>Tarih</label>
+        <input type="date" id="transactionDate">
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" id="cancelBtn">İptal</button>
+        <button class="modal-btn modal-btn-save" id="saveBtn" disabled>Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <script>
+    // Config
+    var SUPABASE_URL = 'https://aveuyrpkdzyiadkjwjca.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2ZXV5cnBrZHp5aWFka2p3amNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0NjA0NzMsImV4cCI6MjA4MzAzNjQ3M30.R85z7ls1uixVDeV5YPzxM1jQVV-KQweP6hNMCOWKuCA';
+    var VALID_USER = 'admin';
+    var VALID_PASS = 'admin9913';
+    
+    var supabase = null;
+    
+    var EXPENSE_CATEGORIES = [
+      { id: 'market', name: 'Market & Gıda', color: '#E63946', icon: '🛒' },
+      { id: 'fatura', name: 'Faturalar', color: '#457B9D', icon: '📄' },
+      { id: 'ulasim', name: 'Ulaşım', color: '#2A9D8F', icon: '🚗' },
+      { id: 'saglik', name: 'Sağlık', color: '#E9C46A', icon: '💊' },
+      { id: 'eglence', name: 'Eğlence', color: '#F4A261', icon: '🎬' },
+      { id: 'giyim', name: 'Giyim', color: '#9B5DE5', icon: '👕' },
+      { id: 'egitim', name: 'Eğitim', color: '#00BBF9', icon: '📚' },
+      { id: 'kira', name: 'Kira', color: '#F15BB5', icon: '🏠' },
+      { id: 'diger', name: 'Diğer', color: '#6C757D', icon: '📦' }
+    ];
+    
+    var INCOME_CATEGORIES = [
+      { id: 'maas', name: 'Maaş', color: '#06D6A0', icon: '💰' },
+      { id: 'ek_gelir', name: 'Ek Gelir', color: '#118AB2', icon: '💵' },
+      { id: 'yatirim', name: 'Yatırım Getirisi', color: '#FFD166', icon: '📈' },
+      { id: 'hediye', name: 'Hediye', color: '#EF476F', icon: '🎁' },
+      { id: 'diger_gelir', name: 'Diğer', color: '#073B4C', icon: '✨' }
+    ];
+    
+    var CURRENCIES = [
+      { code: 'TRY', symbol: '₺', flag: '🇹🇷', locale: 'tr-TR' },
+      { code: 'USD', symbol: '$', flag: '🇺🇸', locale: 'en-US' },
+      { code: 'RUB', symbol: '₽', flag: '🇷🇺', locale: 'ru-RU' }
+    ];
+    
+    var ACCOUNTS = [
+      { id: 'all', name: 'Tümü', icon: '📊', color: '#6366F1' },
+      { id: 'cash', name: 'Nakit', icon: '💵', color: '#22C55E' },
+      { id: 'bank', name: 'Banka', icon: '🏦', color: '#3B82F6' }
+    ];
+    
+    // State
+    var currentUser = '';
+    var transactions = [];
+    var selectedCurrency = 'TRY';
+    var selectedAccount = 'all';
+    var filterType = 'all';
+    var activeTab = 'overview';
+    var exchangeRates = { TRY: 1, USD: 42.96, RUB: 0.54 };
+    var ratesLive = false;
+    var newType = 'expense';
+    var newAccount = 'cash';
+    var newCategory = '';
+    
+    // Init
+    function init() {
+      // Init Supabase
+      if (window.supabase && window.supabase.createClient) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      }
+      
+      // Event listeners
+      document.getElementById('loginBtn').addEventListener('click', handleLogin);
+      document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+      document.getElementById('addBtn').addEventListener('click', openModal);
+      document.getElementById('cancelBtn').addEventListener('click', closeModal);
+      document.getElementById('saveBtn').addEventListener('click', saveTransaction);
+      document.getElementById('addModal').addEventListener('click', function(e) {
+        if (e.target.id === 'addModal') closeModal();
+      });
+      document.getElementById('tabOverview').addEventListener('click', function() { switchTab('overview'); });
+      document.getElementById('tabTransactions').addEventListener('click', function() { switchTab('transactions'); });
+      document.getElementById('typeExpense').addEventListener('click', function() { setType('expense'); });
+      document.getElementById('typeIncome').addEventListener('click', function() { setType('income'); });
+      document.getElementById('amount').addEventListener('input', updateSaveButton);
+      
+      document.getElementById('password').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') handleLogin();
+      });
+      document.getElementById('username').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') document.getElementById('password').focus();
+      });
+      
+      // Set today's date
+      document.getElementById('transactionDate').value = new Date().toISOString().split('T')[0];
+      
+      // Check login
+      if (localStorage.getItem('butce_logged_in') === 'true') {
+        currentUser = localStorage.getItem('butce_current_user') || '';
+        if (currentUser) {
+          showLoading();
+          loadData();
+        }
+      }
+      
+      // Fetch rates
+      fetchRates();
+    }
+    
+    // Wait for DOM and Supabase
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+    
+    function fetchRates() {
+      fetch('https://api.exchangerate-api.com/v4/latest/TRY')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          exchangeRates = { TRY: 1, USD: 1 / data.rates.USD, RUB: 1 / data.rates.RUB };
+          ratesLive = true;
+          updateRateInfo();
+        })
+        .catch(function(e) { console.log('Rate error:', e); });
+    }
+    
+    function handleLogin() {
+      var user = document.getElementById('username').value;
+      var pass = document.getElementById('password').value;
+      
+      if (user === VALID_USER && pass === VALID_PASS) {
+        currentUser = user;
+        localStorage.setItem('butce_logged_in', 'true');
+        localStorage.setItem('butce_current_user', user);
+        document.getElementById('loginError').classList.add('hidden');
+        showLoading();
+        loadData();
+      } else {
+        document.getElementById('loginError').textContent = '⚠️ Kullanıcı adı veya şifre hatalı!';
+        document.getElementById('loginError').classList.remove('hidden');
+      }
+    }
+    
+    function handleLogout() {
+      currentUser = '';
+      transactions = [];
+      localStorage.setItem('butce_logged_in', 'false');
+      localStorage.removeItem('butce_current_user');
+      document.getElementById('mainApp').classList.add('hidden');
+      document.getElementById('loginPage').classList.remove('hidden');
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+    }
+    
+    function showLoading() {
+      document.getElementById('loginPage').classList.add('hidden');
+      document.getElementById('loadingPage').classList.remove('hidden');
+    }
+    
+    function loadData() {
+      if (!supabase) {
+        console.error('Supabase not initialized');
+        transactions = [];
+        showApp();
+        return;
+      }
+      
+      supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', currentUser)
+        .order('date', { ascending: false })
+        .then(function(result) {
+          if (result.error) throw result.error;
+          transactions = result.data || [];
+          showApp();
+        })
+        .catch(function(e) {
+          console.error('Load error:', e);
+          transactions = [];
+          showApp();
+        });
+    }
+    
+    function showApp() {
+      document.getElementById('loadingPage').classList.add('hidden');
+      document.getElementById('mainApp').classList.remove('hidden');
+      renderApp();
+    }
+    
+    function formatCurrency(amount, code) {
+      code = code || selectedCurrency;
+      var cur = CURRENCIES.find(function(c) { return c.code === code; });
+      var converted = code === 'TRY' ? amount : amount / exchangeRates[code];
+      return new Intl.NumberFormat(cur.locale, {
+        style: 'currency', currency: code,
+        minimumFractionDigits: code === 'TRY' ? 0 : 2,
+        maximumFractionDigits: code === 'TRY' ? 0 : 2
+      }).format(converted);
+    }
+    
+    function formatDate(date) {
+      return new Date(date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+    }
+    
+    function getBalances() {
+      var filtered = selectedAccount === 'all' ? transactions : transactions.filter(function(t) { return t.account === selectedAccount; });
+      var income = filtered.filter(function(t) { return t.type === 'income'; }).reduce(function(s, t) { return s + parseFloat(t.amount); }, 0);
+      var expense = filtered.filter(function(t) { return t.type === 'expense'; }).reduce(function(s, t) { return s + parseFloat(t.amount); }, 0);
+      var cash = transactions.filter(function(t) { return t.account === 'cash'; }).reduce(function(s, t) { return t.type === 'income' ? s + parseFloat(t.amount) : s - parseFloat(t.amount); }, 0);
+      var bank = transactions.filter(function(t) { return t.account === 'bank'; }).reduce(function(s, t) { return t.type === 'income' ? s + parseFloat(t.amount) : s - parseFloat(t.amount); }, 0);
+      return { income: income, expense: expense, balance: income - expense, cash: cash, bank: bank };
+    }
+    
+    function renderApp() {
+      var bal = getBalances();
+      document.getElementById('userInfo').textContent = '☁️ ' + currentUser + ' olarak giriş yapıldı';
+      
+      // Account selector
+      var accHtml = '';
+      ACCOUNTS.forEach(function(acc) {
+        var isActive = selectedAccount === acc.id;
+        var balanceHtml = '';
+        if (acc.id === 'cash') {
+          balanceHtml = '<span class="balance ' + (bal.cash >= 0 ? 'balance-positive' : 'balance-negative') + '">' + formatCurrency(bal.cash) + '</span>';
+        } else if (acc.id === 'bank') {
+          balanceHtml = '<span class="balance ' + (bal.bank >= 0 ? 'balance-positive' : 'balance-negative') + '">' + formatCurrency(bal.bank) + '</span>';
+        }
+        accHtml += '<button class="account-btn ' + (isActive ? 'active' : '') + '" data-acc="' + acc.id + '"><span class="icon">' + acc.icon + '</span><span>' + acc.name + '</span>' + balanceHtml + '</button>';
+      });
+      document.getElementById('accountSelector').innerHTML = accHtml;
+      document.querySelectorAll('.account-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() { setAccount(this.dataset.acc); });
+      });
+      
+      // Currency buttons
+      var curHtml = '';
+      CURRENCIES.forEach(function(cur) {
+        var isActive = selectedCurrency === cur.code;
+        curHtml += '<button class="currency-btn ' + (isActive ? 'active' : '') + '" data-cur="' + cur.code + '"><span class="flag">' + cur.flag + '</span>' + cur.code + '</button>';
+      });
+      document.getElementById('currencyButtons').innerHTML = curHtml;
+      document.querySelectorAll('.currency-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() { setCurrency(this.dataset.cur); });
+      });
+      updateRateInfo();
+      
+      // Summary cards
+      var cards = [
+        { label: 'Bakiye', value: bal.balance, color: '#6366F1', icon: '👛', valueColor: bal.balance >= 0 ? '#22C55E' : '#EF4444' },
+        { label: 'Gelir', value: bal.income, color: '#22C55E', icon: '📈', valueColor: '#22C55E' },
+        { label: 'Gider', value: bal.expense, color: '#EF4444', icon: '📉', valueColor: '#EF4444' }
+      ];
+      var cardsHtml = '';
+      cards.forEach(function(card) {
+        cardsHtml += '<div class="card" style="--card-color: ' + card.color + '"><div class="card-header"><span class="card-icon">' + card.icon + '</span><span class="card-label">' + card.label + '</span></div><div class="card-value" style="color: ' + card.valueColor + '">' + formatCurrency(card.value) + '</div></div>';
+      });
+      document.getElementById('summaryCards').innerHTML = cardsHtml;
+      
+      if (activeTab === 'overview') { renderOverview(); } else { renderTransactions(); }
+    }
+    
+    function updateRateInfo() {
+      document.getElementById('rateInfo').innerHTML = '💱 1$ = ₺' + exchangeRates.USD.toFixed(2) + ' &nbsp; 1₽ = ₺' + exchangeRates.RUB.toFixed(2) + (ratesLive ? ' <span class="rate-live">✓ Canlı</span>' : '');
+    }
+    
+    function renderOverview() {
+      var filtered = selectedAccount === 'all' ? transactions : transactions.filter(function(t) { return t.account === selectedAccount; });
+      
+      var expenseByCat = EXPENSE_CATEGORIES.map(function(cat) {
+        return { id: cat.id, name: cat.name, color: cat.color, icon: cat.icon, value: filtered.filter(function(t) { return t.type === 'expense' && t.category === cat.id; }).reduce(function(s, t) { return s + parseFloat(t.amount); }, 0) };
+      }).filter(function(c) { return c.value > 0; });
+      
+      var incomeByCat = INCOME_CATEGORIES.map(function(cat) {
+        return { id: cat.id, name: cat.name, color: cat.color, icon: cat.icon, value: filtered.filter(function(t) { return t.type === 'income' && t.category === cat.id; }).reduce(function(s, t) { return s + parseFloat(t.amount); }, 0) };
+      }).filter(function(c) { return c.value > 0; });
+      
+      var html = '';
+      html += '<div class="content-box"><h3><span class="icon">📤</span> Gider Dağılımı</h3>';
+      if (expenseByCat.length > 0) {
+        expenseByCat.forEach(function(cat) {
+          html += '<div class="legend-item"><div class="legend-dot" style="background: ' + cat.color + '"></div><span class="legend-icon">' + cat.icon + '</span><span class="legend-name">' + cat.name + '</span><span class="legend-value">' + formatCurrency(cat.value) + '</span></div>';
+        });
+      } else { html += '<div class="empty-state">Henüz gider kaydı yok</div>'; }
+      html += '</div>';
+      
+      html += '<div class="content-box"><h3><span class="icon">📥</span> Gelir Dağılımı</h3>';
+      if (incomeByCat.length > 0) {
+        incomeByCat.forEach(function(cat) {
+          html += '<div class="legend-item"><div class="legend-dot" style="background: ' + cat.color + '"></div><span class="legend-icon">' + cat.icon + '</span><span class="legend-name">' + cat.name + '</span><span class="legend-value">' + formatCurrency(cat.value) + '</span></div>';
+        });
+      } else { html += '<div class="empty-state">Henüz gelir kaydı yok</div>'; }
+      html += '</div>';
+      
+      document.getElementById('overviewContent').innerHTML = html;
+      document.getElementById('overviewContent').classList.remove('hidden');
+      document.getElementById('transactionsContent').classList.add('hidden');
+    }
+    
+    function renderTransactions() {
+      var filtered = transactions.filter(function(t) {
+        var typeMatch = filterType === 'all' || t.type === filterType;
+        var accMatch = selectedAccount === 'all' || t.account === selectedAccount;
+        return typeMatch && accMatch;
+      }).sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+      
+      var html = '<div class="filter-bar">';
+      [{ id: 'all', label: 'Tümü' }, { id: 'income', label: '💰 Gelirler' }, { id: 'expense', label: '💸 Giderler' }].forEach(function(f) {
+        html += '<button class="filter-btn ' + (filterType === f.id ? 'active' : '') + '" data-filter="' + f.id + '">' + f.label + '</button>';
+      });
+      html += '</div><div class="transaction-list">';
+      
+      if (filtered.length > 0) {
+        filtered.forEach(function(t) {
+          var catList = t.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+          var cat = catList.find(function(c) { return c.id === t.category; }) || { icon: '❓', name: 'Bilinmiyor', color: '#666' };
+          var acc = ACCOUNTS.find(function(a) { return a.id === t.account; }) || ACCOUNTS[0];
+          html += '<div class="transaction-item"><div class="transaction-icon" style="background: ' + cat.color + '22">' + cat.icon + '</div><div class="transaction-info"><div class="transaction-title">' + (t.description || cat.name) + '</div><div class="transaction-meta">📅 ' + formatDate(t.date) + ' <span class="transaction-tag" style="background: ' + acc.color + '30">' + acc.icon + ' ' + acc.name + '</span></div></div><div class="transaction-amount ' + t.type + '">' + (t.type === 'income' ? '+' : '-') + formatCurrency(parseFloat(t.amount)) + '</div><button class="transaction-delete" data-id="' + t.id + '">🗑️</button></div>';
+        });
+      } else { html += '<div class="empty-state"><div class="icon">📭</div><p>Henüz işlem kaydı yok</p></div>'; }
+      html += '</div>';
+      
+      document.getElementById('transactionsContent').innerHTML = html;
+      document.getElementById('transactionsContent').classList.remove('hidden');
+      document.getElementById('overviewContent').classList.add('hidden');
+      
+      document.querySelectorAll('.filter-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() { setFilter(this.dataset.filter); });
+      });
+      document.querySelectorAll('.transaction-delete').forEach(function(btn) {
+        btn.addEventListener('click', function() { deleteTransaction(parseInt(this.dataset.id)); });
+      });
+    }
+    
+    function setAccount(acc) { selectedAccount = acc; renderApp(); }
+    function setCurrency(cur) { selectedCurrency = cur; localStorage.setItem('butce_currency', cur); renderApp(); }
+    function setFilter(type) { filterType = type; renderTransactions(); }
+    
+    function switchTab(tab) {
+      activeTab = tab;
+      document.getElementById('tabOverview').classList.toggle('active', tab === 'overview');
+      document.getElementById('tabTransactions').classList.toggle('active', tab === 'transactions');
+      if (tab === 'overview') { renderOverview(); } else { renderTransactions(); }
+    }
+    
+    function openModal() {
+      newType = 'expense'; newAccount = 'cash'; newCategory = '';
+      document.getElementById('amount').value = '';
+      document.getElementById('description').value = '';
+      document.getElementById('transactionDate').value = new Date().toISOString().split('T')[0];
+      renderModal();
+      document.getElementById('addModal').classList.remove('hidden');
+    }
+    
+    function closeModal() { document.getElementById('addModal').classList.add('hidden'); }
+    
+    function renderModal() {
+      document.getElementById('typeExpense').className = 'type-btn expense ' + (newType === 'expense' ? 'active' : '');
+      document.getElementById('typeIncome').className = 'type-btn income ' + (newType === 'income' ? 'active' : '');
+      
+      var cur = CURRENCIES.find(function(c) { return c.code === selectedCurrency; });
+      document.getElementById('currencySymbol').textContent = cur.symbol;
+      
+      var accHtml = '';
+      ACCOUNTS.filter(function(a) { return a.id !== 'all'; }).forEach(function(acc) {
+        var isActive = newAccount === acc.id;
+        accHtml += '<button class="account-toggle-btn ' + (isActive ? 'active' : '') + '" style="--acc-color: ' + acc.color + '; --acc-bg: ' + acc.color + '25" data-acc="' + acc.id + '"><span>' + acc.icon + '</span>' + acc.name + '</button>';
+      });
+      document.getElementById('accountToggle').innerHTML = accHtml;
+      document.querySelectorAll('.account-toggle-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() { setNewAccount(this.dataset.acc); });
+      });
+      
+      var cats = newType === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+      var catHtml = '';
+      cats.forEach(function(cat) {
+        var isActive = newCategory === cat.id;
+        catHtml += '<button class="category-btn ' + (isActive ? 'active' : '') + '" style="--cat-color: ' + cat.color + '; --cat-bg: ' + cat.color + '20" data-cat="' + cat.id + '"><span class="icon">' + cat.icon + '</span>' + cat.name + '</button>';
+      });
+      document.getElementById('categoryGrid').innerHTML = catHtml;
+      document.querySelectorAll('.category-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() { setNewCategory(this.dataset.cat); });
+      });
+      
+      updateSaveButton();
+    }
+    
+    function setType(type) { newType = type; newCategory = ''; renderModal(); }
+    function setNewAccount(acc) { newAccount = acc; renderModal(); }
+    function setNewCategory(cat) { newCategory = cat; renderModal(); }
+    
+    function updateSaveButton() {
+      var amount = document.getElementById('amount').value;
+      var canSave = newCategory && amount && parseFloat(amount) > 0;
+      document.getElementById('saveBtn').disabled = !canSave;
+    }
+    
+    function saveTransaction() {
+      var amount = document.getElementById('amount').value;
+      var description = document.getElementById('description').value;
+      var date = document.getElementById('transactionDate').value;
+      
+      if (!newCategory || !amount || !supabase) return;
+      
+      document.getElementById('syncIndicator').classList.remove('hidden');
+      document.getElementById('saveBtn').disabled = true;
+      
+      supabase
+        .from('transactions')
+        .insert([{ user_id: currentUser, type: newType, category: newCategory, amount: parseFloat(amount), description: description, date: date, account: newAccount }])
+        .select()
+        .single()
+        .then(function(result) {
+          if (result.error) throw result.error;
+          transactions.unshift(result.data);
+          closeModal();
+          renderApp();
+          document.getElementById('syncIndicator').classList.add('hidden');
+        })
+        .catch(function(e) {
+          alert('Kaydetme hatası: ' + e.message);
+          document.getElementById('syncIndicator').classList.add('hidden');
+          document.getElementById('saveBtn').disabled = false;
+        });
+    }
+    
+    function deleteTransaction(id) {
+      if (!confirm('Bu işlemi silmek istediğinize emin misiniz?')) return;
+      if (!supabase) return;
+      
+      document.getElementById('syncIndicator').classList.remove('hidden');
+      
+      supabase.from('transactions').delete().eq('id', id)
+        .then(function(result) {
+          if (result.error) throw result.error;
+          transactions = transactions.filter(function(t) { return t.id !== id; });
+          renderApp();
+          document.getElementById('syncIndicator').classList.add('hidden');
+        })
+        .catch(function(e) {
+          alert('Silme hatası: ' + e.message);
+          document.getElementById('syncIndicator').classList.add('hidden');
+        });
+    }
+  </script>
+</body>
+</html>
